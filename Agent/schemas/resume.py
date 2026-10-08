@@ -1,4 +1,4 @@
-from typing import List, NotRequired, Optional
+from typing import List, NotRequired, Optional, Literal
 
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
@@ -83,6 +83,70 @@ class ProjectsSchema(BaseModel):
     )
 
 
+EDUCATION_FILE = "education.json"
+
+
+class EducationItem(BaseModel):
+    institution: str = Field(
+        description="School/college/university name, copied exactly from the data"
+    )
+    degree: str = Field(
+        description="Degree or qualification, e.g. 'B.Tech in Computer Science', copied exactly"
+    )
+    duration: Optional[str] = Field(
+        None, description="Start-end years, only if present in the data"
+    )
+    grade: Optional[str] = Field(
+        None, description="CGPA/percentage, only if present in the data"
+    )
+    location: Optional[str] = Field(
+        None, description="City/state, only if present in the data"
+    )
+    highlights: List[str] = Field(
+        default_factory=list,
+        description="0 to 2 short items (relevant coursework, honors), only if present in the data",
+    )
+
+
+class EducationSchema(BaseModel):
+    education: List[EducationItem] = Field(
+        description="Education entries, most recent first"
+    )
+    extracurriculars: List[str] = Field(
+        default_factory=list,
+        description=(
+            "0 to 3 extracurricular activities (clubs, hackathons, volunteering, "
+            "leadership roles), only if present in the data AND useful for the target job"
+        ),
+    )
+
+
+class SkillAddition(BaseModel):
+    skill: str = Field(description="Skill name, exactly as in the candidate data")
+    category: str = Field(
+        description="Existing category from the skills draft where it fits best"
+    )
+
+
+class OptimizationSchema(BaseModel):
+    section_order: List[Literal["summary", "skills", "projects", "education"]] = Field(
+        description="Order of the sections after the header, best for this job first. Include all four."
+    )
+    skills_to_add: List[SkillAddition] = Field(
+        default_factory=list,
+        description="JD-relevant skills missing from the resume but present in the candidate data",
+    )
+    gaps: List[str] = Field(
+        default_factory=list,
+        description="JD requirements with NO evidence in the candidate data (report only)",
+    )
+    notes: str = Field(
+        "", description="One or two sentences explaining the ordering choice"
+    )
+    covered_keywords: List[str] = Field(default_factory=list)  # filled in Python
+    missing_keywords: List[str] = Field(default_factory=list)  # filled in Python
+
+
 class GraphState(TypedDict):
     jd_text: str
     jd_json: Optional[dict]
@@ -95,10 +159,13 @@ class GraphState(TypedDict):
     docx_path: NotRequired[str]
     skills_draft: NotRequired[dict]
     projects_draft: NotRequired[dict]
+    education_draft: NotRequired[dict]
+    optimization_draft: NotRequired[dict]
 
 
 SECTION_SCHEMAS = {
     "header": ResumeHeaderSchema,
     "summary": SummarySchema,
     "projects": ProjectsSchema,
+    "education": EducationSchema,
 }

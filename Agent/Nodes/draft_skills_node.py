@@ -1,13 +1,10 @@
 from dotenv import load_dotenv
-from langchain_ollama import ChatOllama
-
 from Agent.prompts.resume import build_parse_jd_prompt
 from Agent.schemas.resume import GraphState, SkillsSchema
 from Agent.tools.knowledge import read_knowledge_json
+from Agent.llm.local_llm import llm
 
 load_dotenv()
-
-llm = ChatOllama(model="qwen3:4b", temperature=0.2)
 
 skills_llm = llm.with_structured_output(SkillsSchema)
 

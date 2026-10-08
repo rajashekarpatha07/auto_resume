@@ -1,14 +1,13 @@
 from dotenv import load_dotenv
-from langchain_ollama import ChatOllama
 from Agent.prompts.resume import build_header_prompt
 from Agent.schemas.resume import GraphState, ResumeHeaderSchema
 from Agent.tools.knowledge import read_knowledge_json
+from Agent.llm.local_llm import llm
 
 load_dotenv()
 
 PERSONAL_INFO_FILE = "Personal_info.json"
 
-llm = ChatOllama(model="qwen3:4b", temperature=0.2)
 header_llm = llm.with_structured_output(ResumeHeaderSchema)
 
 

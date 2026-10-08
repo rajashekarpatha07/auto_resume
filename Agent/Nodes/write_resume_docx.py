@@ -9,6 +9,7 @@ from Agent.schemas.resume import (
     SummarySchema,
     SkillsSchema,
     ProjectsSchema,
+    EducationSchema,
 )
 
 OUTPUT_DIR = Path("output")
@@ -59,6 +60,7 @@ def _resume_to_markdown(
     summary: SummarySchema,
     skills: SkillsSchema,
     projects: ProjectsSchema,
+    education: EducationSchema,
 ) -> str:
     skill_lines = "\n".join(
         f"- **{c.category}:** {', '.join(c.skills)}" for c in skills.categories
@@ -71,6 +73,22 @@ def _resume_to_markdown(
             title += f" | {p.link}"
         bullets = "\n".join(f"- {b}" for b in p.bullets)
         project_blocks.append(f"{title}\n\n*{', '.join(p.tech_stack)}*\n\n{bullets}")
+        
+
+    edu_blocks = []
+    for e in education.education:
+        meta = " | ".join(x for x in [e.duration, e.grade, e.location] if x)
+        block = f"### {e.institution}\n\n**{e.degree}**"
+        if meta:
+            block += f"\n\n{meta}"
+        if e.highlights:
+            block += "\n\n" + "\n".join(f"- {h}" for h in e.highlights)
+        edu_blocks.append(block)
+    
+    education_md = "\n\n".join(edu_blocks)
+    if education.extracurriculars:
+        activity_lines = "\n".join(f"- {a}" for a in education.extracurriculars)
+        education_md += f"\n\n**Extracurricular Activities**\n\n{activity_lines}"
 
     return (
         f"# {header.full_name}\n\n"
@@ -78,26 +96,30 @@ def _resume_to_markdown(
         f"{' | '.join(header.contact_items)}\n\n"
         f"## Summary\n\n{summary.summary}\n\n"
         f"## Skills\n\n{skill_lines}\n\n"
-        f"## Projects\n\n" + "\n\n".join(project_blocks) + "\n"
+        f"## Projects\n\n" + "\n\n".join(project_blocks) + "\n\n"
+        f"## Education\n\n{education_md}\n"
     )
 
 
 def write_resume_docx_node(state: GraphState) -> dict:
     approved = state.get("approved_sections", [])
-    if not {"header", "summary", "skills", "projects"} <= set(approved):
+    required = {"header", "summary", "skills", "projects", "education"}
+    if not required <= set(approved):
         raise ValueError(f"Sections not fully approved yet: {approved}")
 
     header = ResumeHeaderSchema(**state["header_draft"])
     summary = SummarySchema(**state["summary_draft"])
     skills = SkillsSchema(**state["skills_draft"])
     projects = ProjectsSchema(**state["projects_draft"])
+    education = EducationSchema(**state["education_draft"])
 
     OUTPUT_DIR.mkdir(exist_ok=True)
     md_path = (OUTPUT_DIR / "resume.md").resolve()
     docx_path = (OUTPUT_DIR / "resume.docx").resolve()
 
     md_path.write_text(
-        _resume_to_markdown(header, summary, skills, projects), encoding="utf-8"
+        _resume_to_markdown(header, summary, skills, projects, education),
+        encoding="utf-8",
     )
     docx_path.unlink(missing_ok=True)
 

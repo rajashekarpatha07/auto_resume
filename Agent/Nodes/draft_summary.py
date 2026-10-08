@@ -1,15 +1,13 @@
 from dotenv import load_dotenv
-from langchain_ollama import ChatOllama
-
 from Agent.prompts.resume import build_summary_prompt
 from Agent.schemas.resume import GraphState, SummarySchema
 from Agent.tools.knowledge import read_knowledge_json
+from Agent.llm.local_llm import llm
 
 load_dotenv()
 
 SUMMARY_FILE = "summery.json"
 
-llm = ChatOllama(model="qwen3:4b", temperature=0.2)
 summary_llm = llm.with_structured_output(SummarySchema)
 
 

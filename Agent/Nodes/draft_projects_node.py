@@ -1,10 +1,9 @@
-from langchain_ollama import ChatOllama
 from Agent.schemas.resume import GraphState, ProjectsSchema
 from Agent.tools.knowledge import read_knowledge_json
+from Agent.llm.local_llm import llm
 
 PROJECTS_FILE = "projects.json"
 
-llm = ChatOllama(model="qwen3:4b", temperature=0.2)
 projects_llm = llm.with_structured_output(ProjectsSchema)
 
 def draft_projects_node(state: GraphState) -> dict:
