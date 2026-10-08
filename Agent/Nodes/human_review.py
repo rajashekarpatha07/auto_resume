@@ -8,29 +8,35 @@ from Agent.schemas.resume import (
     ResumeHeaderSchema,
     SummarySchema,
     SkillsSchema,
+    ProjectsSchema,
 )
 
 SECTION_SCHEMAS = {
     "header": ResumeHeaderSchema,
     "summary": SummarySchema,
     "skills": SkillsSchema,
+    "projects": ProjectsSchema,
 }
+
 DRAFT_NODE = {
     "header": "draft_header",
     "summary": "draft_summary",
     "skills": "draft_skills",
+    "projects": "draft_projects",
 }
+
 NEXT_AFTER_APPROVAL = {
     "header": "draft_summary",
     "summary": "draft_skills",
-    "skills": "write_resume_docx",
+    "skills": "draft_projects",  
+    "projects": "write_resume_docx",  
 }
 
 
 def human_review_node(
     state: GraphState,
 ) -> Command[
-    Literal["draft_header", "draft_summary", "draft_skills", "write_resume_docx"]]:
+    Literal["draft_header", "draft_summary", "draft_skills", "draft_projects", "write_resume_docx", ]]:
     section = state["current_section"]
     draft_key = f"{section}_draft"
 

@@ -62,6 +62,27 @@ class ResumeHeaderSchema(BaseModel):
     )
 
 
+class ProjectItem(BaseModel):
+    name: str = Field(
+        description="Project name, copied exactly as in the candidate data"
+    )
+    tech_stack: List[str] = Field(
+        description="Technologies used, only those listed for this project in the candidate data"
+    )
+    bullets: List[str] = Field(
+        description="2 to 3 concise bullets describing what was built and the outcome"
+    )
+    link: Optional[str] = Field(
+        None, description="GitHub/demo URL, only if present in the candidate data"
+    )
+
+
+class ProjectsSchema(BaseModel):
+    projects: List[ProjectItem] = Field(
+        description="The 2 to 4 projects most relevant to the job, most relevant first"
+    )
+
+
 class GraphState(TypedDict):
     jd_text: str
     jd_json: Optional[dict]
@@ -73,6 +94,11 @@ class GraphState(TypedDict):
     review_feedback: NotRequired[str]
     docx_path: NotRequired[str]
     skills_draft: NotRequired[dict]
+    projects_draft: NotRequired[dict]
 
 
-SECTION_SCHEMAS = {"header": ResumeHeaderSchema, "summary": SummarySchema}
+SECTION_SCHEMAS = {
+    "header": ResumeHeaderSchema,
+    "summary": SummarySchema,
+    "projects": ProjectsSchema,
+}
