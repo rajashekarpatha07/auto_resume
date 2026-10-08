@@ -5,20 +5,7 @@ from langgraph.types import Command, interrupt
 from Agent.schemas.resume import (
     GraphState,
     SECTION_SCHEMAS,
-    ResumeHeaderSchema,
-    SummarySchema,
-    SkillsSchema,
-    ProjectsSchema,
-    EducationSchema,
 )
-
-SECTION_SCHEMAS = {
-    "header": ResumeHeaderSchema,
-    "summary": SummarySchema,
-    "skills": SkillsSchema,
-    "projects": ProjectsSchema,
-    "education": EducationSchema,
-}
 
 DRAFT_NODE = {
     "header": "draft_header",
@@ -26,14 +13,16 @@ DRAFT_NODE = {
     "skills": "draft_skills",
     "projects": "draft_projects",
     "education": "draft_education",
+    "optimization": "optimize_resume",
 }
 
 NEXT_AFTER_APPROVAL = {
     "header": "draft_summary",
     "summary": "draft_skills",
     "skills": "draft_projects",
-    "projects": "draft_education",  # changed
-    "education": "write_resume_docx",  # new
+    "projects": "draft_education",
+    "education": "optimize_resume",
+    "optimization": "write_resume_docx",
 }
 
 
@@ -46,6 +35,7 @@ def human_review_node(
         "draft_skills",
         "draft_projects",
         "draft_education",
+        "optimize_resume",
         "write_resume_docx",
     ]
 ]:

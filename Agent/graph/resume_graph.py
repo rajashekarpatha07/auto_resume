@@ -9,6 +9,7 @@ from Agent.Nodes.write_resume_docx import write_resume_docx_node
 from Agent.Nodes.draft_skills_node import draft_skills_node
 from Agent.Nodes.draft_projects_node import draft_projects_node
 from Agent.Nodes.draft_education_node import draft_education_node
+from Agent.Nodes.optimize_resume_node import optimize_resume_node
 from Agent.schemas.resume import GraphState
 
 
@@ -22,6 +23,7 @@ def build_resume_graph():
     builder.add_node("draft_projects", draft_projects_node)
     builder.add_node("draft_skills", draft_skills_node)
     builder.add_node("draft_education", draft_education_node)
+    builder.add_node("optimize_resume", optimize_resume_node)
 
     builder.add_edge(START, "parse_jd")
     builder.add_edge("parse_jd", "draft_header")
@@ -30,7 +32,8 @@ def build_resume_graph():
     builder.add_edge("draft_skills", "human_review")
     builder.add_edge("draft_projects", "human_review")
     builder.add_edge("draft_education", "human_review")
-    
+    builder.add_edge("optimize_resume", "human_review")
+
     builder.add_edge("write_resume_docx", END)
 
     return builder.compile(checkpointer=MemorySaver())

@@ -166,6 +166,8 @@ class GraphState(TypedDict):
 SECTION_SCHEMAS = {
     "header": ResumeHeaderSchema,
     "summary": SummarySchema,
+    "skills": SkillsSchema,
     "projects": ProjectsSchema,
     "education": EducationSchema,
+    "optimization": OptimizationSchema,
 }
