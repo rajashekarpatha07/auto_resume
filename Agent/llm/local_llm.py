@@ -1,3 +1,3 @@
 from langchain_ollama import ChatOllama
 
-llm = ChatOllama(model="qwen2.5-coder:7b", temperature=0.1, format="json")
+llm = ChatOllama(model="qwen3:8b  ", temperature=0.1, format="json")

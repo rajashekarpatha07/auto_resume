@@ -3,6 +3,7 @@ from Agent.prompts.resume import build_skills_prompt
 from Agent.schemas.resume import GraphState, SkillsSchema
 from Agent.tools.knowledge import read_knowledge_json
 from Agent.llm.local_llm import llm
+from Agent.utils.retry import invoke_with_retry
 
 load_dotenv()
 
@@ -19,7 +20,7 @@ def draft_skills_node(state: GraphState) -> dict:
         previous_draft=state.get("skills_draft"),
         review_feedback=state.get("review_feedback"),
     )
-    draft: SkillsSchema = skills_llm.invoke(prompt)
+    draft: SkillsSchema = invoke_with_retry(skills_llm, prompt)
     return {
         "skills_draft": draft.model_dump(),
         "review_feedback": "",

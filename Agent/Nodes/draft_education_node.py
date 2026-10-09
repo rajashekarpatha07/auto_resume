@@ -2,6 +2,7 @@ from Agent.prompts.resume import build_education_prompt
 from Agent.schemas.resume import EducationSchema, GraphState
 from Agent.tools.knowledge import read_knowledge_json
 from Agent.llm.local_llm import llm
+from Agent.utils.retry import invoke_with_retry
 
 EDUCATION_FILE = "education.json"
 education_llm = llm.with_structured_output(EducationSchema)
@@ -15,7 +16,7 @@ def draft_education_node(state: GraphState) -> dict:
         previous_draft=state.get("education_draft"),
         review_feedback=state.get("review_feedback"),
     )
-    draft: EducationSchema = education_llm.invoke(prompt)
+    draft: EducationSchema = invoke_with_retry(education_llm, prompt)
 
     # Cheap grounding check: flag institutions that don't appear in the source
     for a in draft.extracurriculars:

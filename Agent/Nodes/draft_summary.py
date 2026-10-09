@@ -3,6 +3,7 @@ from Agent.prompts.resume import build_summary_prompt
 from Agent.schemas.resume import GraphState, SummarySchema
 from Agent.tools.knowledge import read_knowledge_json
 from Agent.llm.local_llm import llm
+from Agent.utils.retry import invoke_with_retry
 
 load_dotenv()
 
@@ -19,7 +20,7 @@ def draft_summary_node(state: GraphState) -> dict:
         previous_draft=state.get("summary_draft"),
         review_feedback=state.get("review_feedback"),
     )
-    draft: SummarySchema = summary_llm.invoke(prompt)
+    draft: SummarySchema = invoke_with_retry(summary_llm, prompt)
 
     return {
         "summary_draft": draft.model_dump(),

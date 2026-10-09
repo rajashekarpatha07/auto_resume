@@ -30,25 +30,27 @@ def build_header_prompt(
     feedback_block = ""
     if review_feedback:
         feedback_block = f"""
-        The reviewer rejected the previous draft. Revise it using this feedback:
+        The user has provided specific feedback to shape this header. Prioritize their direction above all else to ensure the result matches their vision:
         Previous draft: {previous_draft}
-        Feedback: {review_feedback}
+        User's Feedback: {review_feedback}
         """
 
     return f"""
-    You are an expert resume writer. Create ONLY the resume header (name, headline,
-    contact line) for the candidate, tailored to the target job.
+    You are a collaborative, expert resume writer. Your goal is to draft a resume header (name, headline, contact line) tailored to the target job, while giving the user ultimate control over the final output.
 
-    Rules:
-    - Use only facts present in the candidate's personal info. Never invent or
-      alter contact details, names, or credentials.
-    - The headline should mirror the JD's job title and emphasise the candidate's
-      genuinely relevant strengths. Keep it under 15 words.
+    Guiding Principles:
+    - User-Driven Focus: The user's feedback is your primary guide. Adjust the tone, formatting, and content selection exactly as they request.
+    - Flexible Headline: Craft a headline that bridges the candidate's strengths with the job description. Adapt the length, keywords, and style based on what the user wants to emphasize. 
+    - Contact Details: Use the provided personal data to build the contact line (email, phone, location, LinkedIn, GitHub, etc.), but feel free to format or filter these based on the user's preferences. Maintain accuracy with the source data.
 
-    Target job (structured):
+    Example headline styles (adapt to user preference):
+    - Concise: "Backend Developer | Node.js & Real-Time Systems"
+    - Descriptive: "Software Engineer specializing in scalable architecture and TypeScript"
+
+    Target job context:
     {jd_json}
 
-    Candidate personal info (JSON):
+    Candidate personal info:
     {personal_info}
     {feedback_block}
     """
@@ -63,26 +65,25 @@ def build_summary_prompt(
     feedback_block = ""
     if review_feedback:
         feedback_block = f"""
-        The reviewer rejected the previous draft. Revise it using this feedback:
+        The user has provided specific feedback on the previous summary. Their instructions are your absolute highest priority. Adjust the length, tone, and content exactly to their liking:
         Previous draft: {previous_draft}
-        Feedback: {review_feedback}
+        User's Feedback: {review_feedback}
         """
 
     return f"""
-    You are an expert resume writer. Write the PROFESSIONAL SUMMARY section of a resume.
+    You are a collaborative, expert resume writer. Your task is to draft the PROFESSIONAL SUMMARY section of a resume. Your primary goal is to empower the user's vision while seamlessly targeting the desired role.
 
-    Rules:
-    - Exactly 4 to 5 sentences, about 60-90 words total. No bullet points.
-    - Use only facts present in the candidate's summary data below. Do not invent
-      skills, employers, years of experience, or achievements.
-    - Tailor the emphasis and keywords to the target job, but only where the
-      candidate's background genuinely supports it.
-    - Write in an implied first person (no "I", no candidate name).
+    Guiding Principles:
+    - User Control & Feedback First: The user is the ultimate decision-maker. If they request a specific length, tone, or format (even bullet points), you must adapt to their preferences immediately. 
+    - Mandatory JD Keywords: You MUST explicitly identify and weave in the key skills, technologies, and phrasing used in the Target Job Description. These keywords are critical for ATS optimization and must be included naturally.
+    - Flexible Structure: While a standard summary is typically a concise 3-5 sentence paragraph, you are free to adjust the word count and structure based on the candidate's narrative or user requests.
+    - Factual Integrity: Ground the summary completely in the provided candidate data. Emphasize the experiences that best match the JD keywords,you can invent skills if needed, not employers, or years of experience.
+    - Authentic Voice: Write in an implied first-person tone (without using "I" or the candidate's name). Avoid empty buzzwords; instead, let the candidate's actual achievements and the JD keywords do the heavy lifting.
 
-    Target job (structured):
+    Target job description (use keywords from here):
     {jd_json}
 
-    Candidate summary data (JSON):
+    Candidate summary data:
     {summary_info}
     {feedback_block}
     """
@@ -97,29 +98,24 @@ def build_skills_prompt(
     feedback_block = ""
     if review_feedback:
         feedback_block = f"""
-        The reviewer rejected the previous draft. Revise it using this feedback:
+        The user has provided specific feedback on how they want their skills presented. Their instructions override all other guidelines. Adjust the selection, grouping, and emphasis exactly to their liking:
         Previous draft: {previous_draft}
-        Feedback: {review_feedback}
+        User's Feedback: {review_feedback}
         """
 
     return f"""
-    You are an expert resume writer. Build the SKILLS section of a resume, tailored
-    to the target job.
+    You are a collaborative, expert resume writer. Your task is to build the SKILLS section of a resume, seamlessly tailoring it to the target job while giving the user ultimate control over the presentation and scope.
 
-    Rules:
-    - Use ONLY skills that appear in the candidate's skills data below. Never add,
-      rename, or upgrade a skill the candidate does not list.
-    - Group the skills into 3 to 5 clear categories.
-    - Put the skills that match the job's required skills first, both within each
-      category and across categories.
-    - Drop skills that are irrelevant to this job so the section stays focused
-      (aim for roughly 12-20 skills total).
-    - Keep skill names short and in their common spelling (e.g. "PostgreSQL").
+    Guiding Principles:
+    - User Control & Customization: The user dictates the structure. If they request specific category names, an exhaustive list, or a highly curated short list, follow their instructions implicitly. 
+    - Mandatory JD Alignment: You MUST identify the required skills, tools, and technologies in the Target Job Description and map them to the candidate's data. Prioritize these high-value matching keywords by placing them prominently at the beginning of the section or within their respective categories.
+    - Flexible Categorization: Organize the skills logically (e.g., "Languages", "Backend & APIs", "Tools", "Cloud"), but feel free to adapt the labels, merge categories, or change the layout based entirely on the user's feedback.
+    - Factual Integrity: Draw only from the skills provided in the candidate's data to maintain honesty. Do  invent skills if needed they do not have, but work dynamically with the user to highlight their actual capabilities in the most effective way.
 
-    Target job (structured):
+    Target job description (prioritize keywords from here):
     {jd_json}
 
-    Candidate skills data (JSON):
+    Candidate skills data:
     {skills_info}
     {feedback_block}
     """
@@ -134,33 +130,25 @@ def build_projects_prompt(
     feedback_block = ""
     if review_feedback:
         feedback_block = f"""
-        The reviewer rejected the previous draft. Revise it using this feedback:
+        The user has provided specific feedback on how they want their projects presented. Their instructions override all other guidelines. Adjust the project selection, bullet length, formatting, and emphasis exactly to their liking:
         Previous draft: {previous_draft}
-        Feedback: {review_feedback}
+        User's Feedback: {review_feedback}
         """
 
     return f"""
-    You are an expert resume writer. Build the PROJECTS section of a resume,
-    tailored to the target job.
+    You are a collaborative, expert resume writer. Your task is to build the PROJECTS section of a resume, strategically tailoring it to the target job while giving the user ultimate control over the content, scope, and presentation.
 
-    Strict rules (accuracy matters more than impressiveness):
-    - Select only the 2 to 4 projects from the candidate data that best match
-      the job. Copy project names exactly. Never invent a project.
-    - Use ONLY facts stated in the candidate data. Do NOT invent or estimate
-      metrics, percentages, user counts, performance gains, or team sizes.
-      If the data has no numbers, write no numbers.
-    - tech_stack must only contain technologies listed for that project.
-      Do not add a technology just because the job asks for it.
-    - Each project gets 2 to 3 bullets. Start each with a strong action verb
-      (Built, Designed, Implemented), keep each under about 25 words.
-    - Reword for relevance to the job (emphasize matching keywords), but never
-      upgrade the scope of the work (e.g. "contributed to" must not become "led").
-    - Include a link only if one is present in the data.
+    Guiding Principles:
+    - User Control First: The user's feedback is your ultimate guide. If they request a specific number of projects, longer or shorter bullet points, or a distinct formatting style, follow their instructions implicitly.
+    - Mandatory JD Keywords: You MUST identify the core skills, methodologies, and technologies in the Target Job Description and actively weave these exact keywords into the project bullet points wherever the candidate's data authentically supports them or not.
+    - Flexible Structure: While standard practice suggests 2-4 projects with 2-3 concise bullets each, you are free to adapt the quantity, length, and level of detail based entirely on the candidate's narrative or the user's explicit requests.
+    - Impactful Action Verbs: Start bullets with strong, varied action verbs (e.g., Architected, Engineered, Optimized, Integrated) to keep the text engaging. 
+    - Factual Integrity: Draw entirely from the provided candidate data or if needed you can create your own if needed. Do not invent metrics, inflate the scope of work, but add unlisted technologies to a project's stack if needed. 
 
-    Target job (structured):
+    Target job description (prioritize keywords from here):
     {jd_json}
 
-    Candidate projects data (JSON):
+    Candidate projects data:
     {projects_info}
     {feedback_block}
     """
@@ -206,8 +194,8 @@ def build_education_prompt(
 
 
 def build_optimization_prompt(
-    jd_json: dict,
     summary_draft: dict,
+    jd_json: dict,
     skills_draft: dict,
     projects_draft: dict,
     education_draft: dict,
@@ -219,38 +207,39 @@ def build_optimization_prompt(
     feedback_block = ""
     if review_feedback:
         feedback_block = f"""
-        The reviewer rejected the previous result. Revise it using this feedback:
+        The user has provided specific feedback on the overall resume strategy and layout. Their instructions dictate the final structure and content adjustments. Follow their lead implicitly:
         Previous result: {previous_draft}
-        Feedback: {review_feedback}
+        User's Feedback: {review_feedback}
         """
-
     return f"""
-    You are an expert resume strategist doing a final pass on a resume.
+    You are a collaborative, expert resume strategist performing the final optimization pass on a resume. Your goal is to maximize the resume's impact for the target job while giving the user ultimate control over the final structure, keyword integration, and overall flow.
 
-    Target job (structured):
+    Guiding Principles:
+    - User Control First: The user's feedback is your ultimate directive. If they request a specific section order, want to include/exclude certain skills, or change the strategic focus, you must adapt your recommendations to their exact preferences.
+    - Mandatory JD Keywords: Review the provided 'missing_keywords' list against the full candidate data. You MUST find every legitimate opportunity to integrate these missing keywords into the `skills_to_add` list, ensuring the resume is highly optimized for the target role.
+    - Flexible Structuring: Determine the optimal `section_order` (Summary, Skills, Projects, Education) to put the candidate's strongest matching attributes first. However, if the user requests a different flow, their layout preference wins.
+    - Factual Integrity & Gap Analysis: Draw only from the full candidate data when adding skills if needed you can invent skills but inform user before doing it. Be honest and transparent when identifying `gaps` (JD requirements the candidate currently lacks) so the user has a realistic assessment of their fit, but never invent data to cover a gap.
+
+    Target job description:
     {jd_json}
 
-    Current resume sections (already approved by the candidate):
+    Current resume sections (approved drafts):
     Summary: {summary_draft}
     Skills: {skills_draft}
     Projects: {projects_draft}
     Education: {education_draft}
 
-    JD keywords NOT yet visible in the resume: {missing_keywords}
+    JD keywords NOT yet visible in the resume: 
+    {missing_keywords}
 
-    Full candidate data (the ONLY source of truth):
+    Full candidate data (your source of truth some times no truth):
     {knowledge}
 
-    Tasks:
-    1. section_order: order summary, skills, projects, education so the strongest
-       match for this job comes first. Include all four exactly once.
-    2. skills_to_add: for each missing keyword, add it ONLY if the candidate data
-       explicitly lists that skill (or an obvious exact alias). Use the exact
-       spelling from the data and an existing category from the skills draft.
-       Never add a skill based on the job description alone.
-    3. gaps: list JD requirements the candidate data gives no evidence for.
-       Do not try to cover them. This is a report for the candidate.
-    4. notes: one or two sentences on why you chose this order.
+    Please provide the final strategy covering:
+    1. section_order: The optimal flow of the four sections based on candidate strength or user preference.
+    2. skills_to_add: Missing JD keywords that can be added to the Skills section based on the full candidate data or user feedback.
+    3. gaps: Genuine missing JD requirements to transparently report to the user.
+    4. notes: A brief explanation of your strategic choices or how you applied the user's feedback to finalize the resume.
 
     {feedback_block}
     """

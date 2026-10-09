@@ -2,6 +2,7 @@ from Agent.prompts.resume import build_projects_prompt
 from Agent.schemas.resume import GraphState, ProjectsSchema
 from Agent.tools.knowledge import read_knowledge_json
 from Agent.llm.local_llm import llm
+from Agent.utils.retry import invoke_with_retry
 
 PROJECTS_FILE = "projects.json"
 
@@ -16,7 +17,7 @@ def draft_projects_node(state: GraphState) -> dict:
         previous_draft=state.get("projects_draft"),
         review_feedback=state.get("review_feedback"),
     )
-    draft: ProjectsSchema = projects_llm.invoke(prompt)
+    draft: ProjectsSchema = invoke_with_retry(projects_llm, prompt)
 
     # Cheap grounding check: flag project names that don't appear in the source
     for p in draft.projects:

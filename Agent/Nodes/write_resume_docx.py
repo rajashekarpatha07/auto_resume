@@ -1,81 +1,59 @@
-import asyncio
 from pathlib import Path
-
-from langchain_mcp_adapters.client import MultiServerMCPClient
-
+import re
 from Agent.schemas.resume import (
-    GraphState,
-    ResumeHeaderSchema,
-    SummarySchema,
-    SkillsSchema,
-    ProjectsSchema,
     EducationSchema,
+    GraphState,
+    ProjectsSchema,
+    ResumeHeaderSchema,
+    SkillsSchema,
+    SummarySchema,
 )
+from Agent.tools.docx_builder import build_resume_docx
 
 OUTPUT_DIR = Path("output")
+DEFAULT_SECTION_ORDER = ["summary", "skills", "projects", "education"]
 
-DOCX_MCP_CONFIG = {
-    "docx": {
-        "command": "uvx",
-        "args": ["--with", "mcp<2", "docx-mcp-server"],
-        "transport": "stdio",
+
+# ──────────────── Markdown preview (kept for quick inspection) ────────────────
+
+
+def _resume_to_markdown(header, summary, skills, projects, education, section_order):
+    parts = [
+        f"# {header.full_name}\n\n"
+        f"**{header.headline}**\n\n"
+        f"{' | '.join(header.contact_items)}\n",
+    ]
+
+    section_md = {
+        "summary": f"## Summary\n\n{summary.summary}\n",
+        "skills": "## Skills\n\n"
+        + "\n".join(
+            f"- **{c.category}:** {', '.join(c.skills)}" for c in skills.categories
+        )
+        + "\n",
+        "projects": "## Projects\n\n"
+        + "\n\n".join(_project_md(p) for p in projects.projects)
+        + "\n",
+        "education": "## Education\n\n" + _education_md(education) + "\n",
     }
-}
+
+    for name in section_order:
+        if name in section_md:
+            parts.append(section_md[name])
+
+    return "\n".join(parts)
 
 
-async def _write_docx_via_mcp(md_path: Path, docx_path: Path) -> None:
-    client = MultiServerMCPClient(DOCX_MCP_CONFIG)
-    tools = await client.get_tools()
-    tool = next(
-        (
-            candidate
-            for candidate in tools
-            if "docx" in f"{candidate.name} {candidate.description}".lower()
-            and any(
-                word in f"{candidate.name} {candidate.description}".lower()
-                for word in ("markdown", "convert", "create")
-            )
-        ),
-        None,
-    )
-    if tool is None:
-        raise RuntimeError("The DOCX MCP server has no Markdown-to-DOCX tool")
-
-    markdown = md_path.read_text(encoding="utf-8")
-    arguments = {}
-    for name in tool.args:
-        key = name.lower()
-        if any(word in key for word in ("output", "destination")):
-            arguments[name] = str(docx_path)
-        elif any(word in key for word in ("markdown", "content", "text")):
-            arguments[name] = markdown
-        elif any(word in key for word in ("input", "source", "file", "path")):
-            arguments[name] = str(md_path)
-
-    await tool.ainvoke(arguments)
+def _project_md(p):
+    title = f"### {p.name}"
+    if p.link:
+        title += f" | {p.link}"
+    bullets = "\n".join(f"- {b}" for b in p.bullets)
+    return f"{title}\n\n*{', '.join(p.tech_stack)}*\n\n{bullets}"
 
 
-def _resume_to_markdown(
-    header: ResumeHeaderSchema,
-    summary: SummarySchema,
-    skills: SkillsSchema,
-    projects: ProjectsSchema,
-    education: EducationSchema,
-) -> str:
-    skill_lines = "\n".join(
-        f"- **{c.category}:** {', '.join(c.skills)}" for c in skills.categories
-    )
-
-    project_blocks = []
-    for p in projects.projects:
-        title = f"### {p.name}"
-        if p.link:
-            title += f" | {p.link}"
-        bullets = "\n".join(f"- {b}" for b in p.bullets)
-        project_blocks.append(f"{title}\n\n*{', '.join(p.tech_stack)}*\n\n{bullets}")
-        
-
-    edu_blocks = []
+def _education_md(education):
+    blocks = []
     for e in education.education:
         meta = " | ".join(x for x in [e.duration, e.grade, e.location] if x)
         block = f"### {e.institution}\n\n**{e.degree}**"
@@ -83,27 +61,21 @@ def _resume_to_markdown(
             block += f"\n\n{meta}"
         if e.highlights:
             block += "\n\n" + "\n".join(f"- {h}" for h in e.highlights)
-        edu_blocks.append(block)
-    
-    education_md = "\n\n".join(edu_blocks)
-    if education.extracurriculars:
-        activity_lines = "\n".join(f"- {a}" for a in education.extracurriculars)
-        education_md += f"\n\n**Extracurricular Activities**\n\n{activity_lines}"
+        blocks.append(block)
 
-    return (
-        f"# {header.full_name}\n\n"
-        f"**{header.headline}**\n\n"
-        f"{' | '.join(header.contact_items)}\n\n"
-        f"## Summary\n\n{summary.summary}\n\n"
-        f"## Skills\n\n{skill_lines}\n\n"
-        f"## Projects\n\n" + "\n\n".join(project_blocks) + "\n\n"
-        f"## Education\n\n{education_md}\n"
-    )
+    md = "\n\n".join(blocks)
+    if education.extracurriculars:
+        lines = "\n".join(f"- {a}" for a in education.extracurriculars)
+        md += f"\n\n**Extracurricular Activities**\n\n{lines}"
+    return md
+
+
+# ──────────────── Node ────────────────
 
 
 def write_resume_docx_node(state: GraphState) -> dict:
     approved = state.get("approved_sections", [])
-    required = {"header", "summary", "skills", "projects", "education"}
+    required = {"header", "summary", "skills", "projects", "education", "optimization"}
     if not required <= set(approved):
         raise ValueError(f"Sections not fully approved yet: {approved}")
 
@@ -113,15 +85,41 @@ def write_resume_docx_node(state: GraphState) -> dict:
     projects = ProjectsSchema(**state["projects_draft"])
     education = EducationSchema(**state["education_draft"])
 
-    OUTPUT_DIR.mkdir(exist_ok=True)
-    md_path = (OUTPUT_DIR / "resume.md").resolve()
-    docx_path = (OUTPUT_DIR / "resume.docx").resolve()
+    # Use section order from the optimization node if available
+    section_order = DEFAULT_SECTION_ORDER
+    if opt := state.get("optimization_draft"):
+        section_order = opt.get("section_order", DEFAULT_SECTION_ORDER)
 
+    jd_data = state.get("jd_json", {})
+    company_name = jd_data.get("company_name") or "UnknownCompany"
+    job_title = jd_data.get("job_title") or "Role"
+
+    safe_company = re.sub(r"[^\w\-]", "_", company_name).strip("_")
+    safe_title = re.sub(r"[^\w\-]", "_", job_title).strip("_")
+
+    file_name = f"{safe_company}_{safe_title}_Resume"
+
+    OUTPUT_DIR.mkdir(exist_ok=True)
+    md_path = (OUTPUT_DIR / f"{file_name}_Resume").resolve()
+    docx_path = (OUTPUT_DIR / f"{file_name}_Resume").resolve()
+
+    # Markdown preview
     md_path.write_text(
-        _resume_to_markdown(header, summary, skills, projects, education),
+        _resume_to_markdown(
+            header, summary, skills, projects, education, section_order
+        ),
         encoding="utf-8",
     )
-    docx_path.unlink(missing_ok=True)
 
-    asyncio.run(_write_docx_via_mcp(md_path, docx_path))
+    # Professional DOCX
+    build_resume_docx(
+        doc_path=docx_path,
+        header=header,
+        summary=summary,
+        skills=skills,
+        projects=projects,
+        education=education,
+        section_order=section_order,
+    )
+
     return {"docx_path": str(docx_path)}

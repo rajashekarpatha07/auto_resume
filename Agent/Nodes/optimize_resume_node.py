@@ -2,6 +2,7 @@ from Agent.llm.local_llm import llm
 from Agent.prompts.resume import build_optimization_prompt
 from Agent.schemas.resume import OptimizationSchema, GraphState
 from Agent.tools.knowledge import read_knowledge_json
+from Agent.utils.retry import invoke_with_retry
 
 
 SUMMARY_FILE = "summery.json"
@@ -44,7 +45,7 @@ def optimize_resume_node(state: GraphState) -> dict:
         review_feedback=state.get("review_feedback"),
     )
 
-    draft: OptimizationSchema = optimizer_llm.invoke(prompt)
+    draft: OptimizationSchema = invoke_with_retry(optimizer_llm, prompt)
 
     # Grounding check: every added skill must exist somewhere in the candidate data
     source = str(knowledge).lower()

@@ -3,6 +3,7 @@ from Agent.prompts.resume import build_header_prompt
 from Agent.schemas.resume import GraphState, ResumeHeaderSchema
 from Agent.tools.knowledge import read_knowledge_json
 from Agent.llm.local_llm import llm
+from Agent.utils.retry import invoke_with_retry
 
 load_dotenv()
 
@@ -19,7 +20,7 @@ def draft_header_node(state: GraphState) -> dict:
         previous_draft=state.get("header_draft"),
         review_feedback=state.get("review_feedback"),
     )
-    draft: ResumeHeaderSchema = header_llm.invoke(prompt)
+    draft: ResumeHeaderSchema = invoke_with_retry(header_llm, prompt)
 
     return {
         "header_draft": draft.model_dump(),
