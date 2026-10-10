@@ -100,8 +100,8 @@ def write_resume_docx_node(state: GraphState) -> dict:
     file_name = f"{safe_company}_{safe_title}_Resume"
 
     OUTPUT_DIR.mkdir(exist_ok=True)
-    md_path = (OUTPUT_DIR / f"{file_name}_Resume").resolve()
-    docx_path = (OUTPUT_DIR / f"{file_name}_Resume").resolve()
+    md_path = (OUTPUT_DIR / f"{file_name}_Resume.md").resolve()
+    docx_path = (OUTPUT_DIR / f"{file_name}_Resume.docx").resolve()
 
     # Markdown preview
     md_path.write_text(

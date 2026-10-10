@@ -17,7 +17,6 @@ def parse_jd_node(state: GraphState) -> GraphState:
 
     prompt = build_parse_jd_prompt(state["jd_text"], knowledge_json)
     parsed_jd: JobDescriptionSchema = invoke_with_retry(structured_llm, prompt)
-    print(parsed_jd)
 
     return {"jd_json": parsed_jd.model_dump()}
 
