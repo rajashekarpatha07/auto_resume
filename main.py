@@ -113,7 +113,7 @@ def _format_draft(section: str, draft: dict) -> str:
 
 
 def run_demo() -> None:
-    config = {"configurable": {"thread_id": "test-run-3"}}
+    config = {"configurable": {"thread_id": config}}
     result = graph.invoke({"jd_text": MOCK_JD}, config)
 
     while "__interrupt__" in result:
